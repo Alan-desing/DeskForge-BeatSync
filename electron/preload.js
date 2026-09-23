@@ -7,5 +7,10 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('deskforgeAPI', {
   ping: () => 'pong',
   showAbout: () => ipcRenderer.invoke('app:showAbout'),
-  minimizeToTray: () => ipcRenderer.invoke('app:minimizeToTray')
+  minimizeToTray: () => ipcRenderer.invoke('app:minimizeToTray'),
+
+  // E2: Bloc de Notas (Notepad) APIs
+  openFile: () => ipcRenderer.invoke('file:open'),
+  saveFile: (data) => ipcRenderer.invoke('file:save', data),
+  saveFileAs: (data) => ipcRenderer.invoke('file:saveAs', data)
 });

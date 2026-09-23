@@ -1,5 +1,6 @@
-const { app, BrowserWindow, Menu, Tray, dialog, nativeImage, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, Tray, dialog, nativeImage, ipcMain, Notification } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 let mainWindow = null;
 let tray = null;
@@ -20,7 +21,6 @@ function getTrayIcon() {
     console.error('Error loading tray icon from file:', err);
   }
 
-  // Fallback data URL icon
   const fallbackDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSU5EUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAADhJREFUWIXtzDENADAMwLCk/qWn4eioC/SAggRerpmZWbfg122+AQAAAAAAAAAAAAAAAADAa8AGxVwAAd2z+eQAAAAASUVORK5CYII=';
   return nativeImage.createFromDataURL(fallbackDataUrl);
 }
@@ -86,7 +86,7 @@ function showAboutDialog() {
     type: 'info',
     title: 'Acerca de DeskForge + BeatSync',
     message: 'DeskForge + BeatSync v1.0.0',
-    detail: 'Suite de productividad con reproductor musical interactivo.\n\nE1: Ventana principal redimensionable, menú nativo y bandeja del sistema (System Tray).\nPlataforma: Windows (Electron + Desktop APIs).',
+    detail: 'Suite de productividad con reproductor musical interactivo.\n\nE1: Ventana principal redimensionable, menú nativo y tray.\nE2: Bloc de Notas con autoguardado y diálogos nativos.\nPlataforma: Windows (Electron + Desktop APIs).',
     buttons: ['Aceptar']
   });
 }
@@ -149,7 +149,7 @@ function createApplicationMenu() {
       label: 'Ayuda',
       submenu: [
         {
-          label: 'Documentación E1',
+          label: 'Documentación de DeskForge',
           click: () => showAboutDialog()
         }
       ]
@@ -203,6 +203,98 @@ ipcMain.handle('app:showAbout', () => {
 
 ipcMain.handle('app:minimizeToTray', () => {
   if (mainWindow) mainWindow.hide();
+});
+
+// IPC Handlers for E2 - Bloc de Notas
+ipcMain.handle('file:open', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Abrir archivo de texto',
+    properties: ['openFile'],
+    filters: [
+      { name: 'Archivos de texto', extensions: ['txt', 'md', 'json', 'js', 'css', 'html'] },
+      { name: 'Todos los archivos', extensions: ['*'] }
+    ]
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+
+  const filePath = result.filePaths[0];
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    return { path: filePath, content };
+  } catch (err) {
+    console.error('Error leyendo archivo:', err);
+    throw new Error('No se pudo leer el archivo seleccionado.');
+  }
+});
+
+ipcMain.handle('file:save', async (_, { filePath, content }) => {
+  let targetPath = filePath;
+
+  if (!targetPath) {
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Guardar nota',
+      defaultPath: 'nota.txt',
+      filters: [
+        { name: 'Archivos de texto (*.txt)', extensions: ['txt'] },
+        { name: 'Markdown (*.md)', extensions: ['md'] }
+      ]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return null;
+    }
+    targetPath = result.filePath;
+  }
+
+  try {
+    fs.writeFileSync(targetPath, content, 'utf-8');
+    
+    if (Notification.isSupported()) {
+      new Notification({
+        title: 'DeskForge — Bloc de Notas',
+        body: `Nota guardada con éxito en ${path.basename(targetPath)}`
+      }).show();
+    }
+    
+    return { path: targetPath };
+  } catch (err) {
+    console.error('Error guardando archivo:', err);
+    throw new Error('No se pudo guardar el archivo.');
+  }
+});
+
+ipcMain.handle('file:saveAs', async (_, { content }) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: 'Guardar nota como...',
+    defaultPath: 'nota.txt',
+    filters: [
+      { name: 'Archivos de texto (*.txt)', extensions: ['txt'] },
+      { name: 'Markdown (*.md)', extensions: ['md'] }
+    ]
+  });
+
+  if (result.canceled || !result.filePath) {
+    return null;
+  }
+
+  try {
+    fs.writeFileSync(result.filePath, content, 'utf-8');
+    
+    if (Notification.isSupported()) {
+      new Notification({
+        title: 'DeskForge — Bloc de Notas',
+        body: `Nota guardada como ${path.basename(result.filePath)}`
+      }).show();
+    }
+    
+    return { path: result.filePath };
+  } catch (err) {
+    console.error('Error guardando archivo como:', err);
+    throw new Error('No se pudo guardar el archivo.');
+  }
 });
 
 app.whenReady().then(() => {

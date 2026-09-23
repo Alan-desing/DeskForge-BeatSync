@@ -9,42 +9,103 @@
   </head>
   <body>
     <div id="app">
-      <header class="app-header">
-        <div class="app-title">
-          <h1>DeskForge + BeatSync</h1>
-          <p class="subtitle">Donde el código y la música se sincronizan</p>
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div>
+          <div class="sidebar-header">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text">
+              <h1>DeskForge</h1>
+              <p>BeatSync Studio</p>
+            </div>
+          </div>
+
+          <nav class="nav-menu">
+            <div class="nav-item active" id="nav-notes">
+              <span>📝</span>
+              <span>Bloc de Notas</span>
+            </div>
+            <div class="nav-item disabled" title="Próximamente">
+              <span>⏱️</span>
+              <span>Pomodoro</span>
+            </div>
+            <div class="nav-item disabled" title="Próximamente">
+              <span>🎵</span>
+              <span>Reproductor</span>
+            </div>
+          </nav>
         </div>
-        <div id="ping-status" class="status-badge">IPC: Inicializando...</div>
-      </header>
 
-      <main class="app-main">
-        <h2 class="section-title">E1 — Ventana Principal & APIs Nativas</h2>
+        <div class="sidebar-footer">
+          <button id="btn-about" class="btn-sidebar-footer">
+            <span>ℹ️</span>
+            <span>Acerca de DeskForge</span>
+          </button>
+          <button id="btn-minimize-tray" class="btn-sidebar-footer">
+            <span>📌</span>
+            <span>Minimizar a Tray</span>
+          </button>
+        </div>
+      </aside>
 
-        <div class="cards-grid">
-          <!-- Card 1: Window resizable -->
-          <div class="card">
-            <h3>Ventana Redimensionable</h3>
-            <p>La ventana puede cambiar de tamaño dinámicamente respetando límites mínimos de 900x600 px.</p>
-            <div id="dimensions" class="dimensions-display">Dimensiones actuales: -- x --</div>
+      <!-- Main Workspace -->
+      <main class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+          <div class="window-title">
+            <span>Workspace</span>
+            <span>/</span>
+            <span id="topbar-view-title" style="color: var(--text-primary);">Bloc de Notas</span>
           </div>
 
-          <!-- Card 2: Native Menu -->
-          <div class="card">
-            <h3>Menú Nativo de Aplicación</h3>
-            <p>Menú superior con secciones de Archivo, Ver, Ventana y Ayuda integrados con el sistema operativo.</p>
-            <div class="btn-group">
-              <button id="btn-about" class="btn">Abrir "Acerca de..."</button>
+          <div class="topbar-actions">
+            <div class="status-indicator">
+              <div id="status-dot" class="status-dot"></div>
+              <span id="status-text">Listo</span>
             </div>
           </div>
+        </header>
 
-          <!-- Card 3: System Tray -->
-          <div class="card">
-            <h3>Bandeja del Sistema (System Tray)</h3>
-            <p>Ícono interactivo disponible en la barra de tareas de Windows con menú contextual y soporte para minimizar/restaurar.</p>
-            <div class="btn-group">
-              <button id="btn-minimize-tray" class="btn btn-secondary">Minimizar a Tray</button>
+        <!-- View Container -->
+        <div class="view-container">
+          <!-- Notepad Module -->
+          <section class="notepad-wrapper">
+            <div class="notepad-header">
+              <div class="file-meta">
+                <span id="note-file-path" class="file-name">Nota Sin Título</span>
+                <span id="note-save-status" class="badge-status saved">Guardado localmente</span>
+              </div>
+
+              <div class="action-buttons">
+                <button id="btn-note-new" class="btn-action">
+                  <span>📄</span> Nueva
+                </button>
+                <button id="btn-note-open" class="btn-action">
+                  <span>📂</span> Abrir
+                </button>
+                <button id="btn-note-save" class="btn-action primary">
+                  <span>💾</span> Guardar
+                </button>
+                <button id="btn-note-save-as" class="btn-action">
+                  <span>💾</span> Guardar Como...
+                </button>
+              </div>
             </div>
-          </div>
+
+            <textarea
+              id="note-editor"
+              class="notepad-textarea"
+              placeholder="Escribe tus notas de código o ideas aquí... Tu trabajo se autoguarda automáticamente."
+            ></textarea>
+
+            <div class="notepad-footer">
+              <span id="note-status-msg">DeskForge + BeatSync v1.0.0</span>
+              <div class="stats-group">
+                <span id="note-word-count">0 palabras</span>
+                <span id="note-char-count">0 caracteres</span>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
     </div>
