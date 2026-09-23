@@ -10,15 +10,41 @@
   <body>
     <div id="app">
       <header class="app-header">
-        <h1>DeskForge + BeatSync</h1>
-        <p class="subtitle">Donde el código y la música se sincronizan</p>
+        <div class="app-title">
+          <h1>DeskForge + BeatSync</h1>
+          <p class="subtitle">Donde el código y la música se sincronizan</p>
+        </div>
+        <div id="ping-status" class="status-badge">IPC: Inicializando...</div>
       </header>
 
       <main class="app-main">
-        <div class="status-card">
-          <h2>FASE 0 — Estructura Base</h2>
-          <p>Electron, Vite, Preload e IPC bridge configurados correctamente.</p>
-          <div id="ping-status" class="status-badge">Verificando comunicación IPC...</div>
+        <h2 class="section-title">E1 — Ventana Principal & APIs Nativas</h2>
+
+        <div class="cards-grid">
+          <!-- Card 1: Window resizable -->
+          <div class="card">
+            <h3>Ventana Redimensionable</h3>
+            <p>La ventana puede cambiar de tamaño dinámicamente respetando límites mínimos de 900x600 px.</p>
+            <div id="dimensions" class="dimensions-display">Dimensiones actuales: -- x --</div>
+          </div>
+
+          <!-- Card 2: Native Menu -->
+          <div class="card">
+            <h3>Menú Nativo de Aplicación</h3>
+            <p>Menú superior con secciones de Archivo, Ver, Ventana y Ayuda integrados con el sistema operativo.</p>
+            <div class="btn-group">
+              <button id="btn-about" class="btn">Abrir "Acerca de..."</button>
+            </div>
+          </div>
+
+          <!-- Card 3: System Tray -->
+          <div class="card">
+            <h3>Bandeja del Sistema (System Tray)</h3>
+            <p>Ícono interactivo disponible en la barra de tareas de Windows con menú contextual y soporte para minimizar/restaurar.</p>
+            <div class="btn-group">
+              <button id="btn-minimize-tray" class="btn btn-secondary">Minimizar a Tray</button>
+            </div>
+          </div>
         </div>
       </main>
     </div>
