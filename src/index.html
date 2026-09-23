@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' http://localhost:* ws://localhost:*;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' http://localhost:* ws://localhost:* https://www.soundhelix.com;" />
     <title>DeskForge + BeatSync</title>
     <link rel="stylesheet" href="./styles/main.css" />
   </head>
@@ -29,7 +29,7 @@
               <span>⏱️</span>
               <span>Pomodoro</span>
             </div>
-            <div class="nav-item disabled" id="nav-player" title="Próximamente">
+            <div class="nav-item" id="nav-player" data-target="view-player">
               <span>🎵</span>
               <span>Reproductor</span>
             </div>
@@ -112,7 +112,6 @@
           <!-- View 2: Pomodoro Module -->
           <section id="view-pomodoro" class="view-section">
             <div class="pomodoro-wrapper">
-              <!-- Mode selector buttons -->
               <div class="pomodoro-mode-selector">
                 <button id="btn-mode-work" class="btn-mode active work">
                   <span>🛠️</span> Trabajo (25m)
@@ -122,13 +121,11 @@
                 </button>
               </div>
 
-              <!-- Main Circular Timer Display -->
               <div id="pomo-circle" class="pomodoro-timer-circle">
                 <div id="pomo-display" class="timer-display">25:00</div>
                 <div id="pomo-phase-label" class="timer-phase-label">Sesión de Trabajo</div>
               </div>
 
-              <!-- Controls -->
               <div class="pomodoro-controls">
                 <button id="btn-pomo-reset" class="btn-timer-icon" title="Reiniciar">
                   🔄
@@ -141,7 +138,6 @@
                 </button>
               </div>
 
-              <!-- Footer Stats & Presets -->
               <div class="pomodoro-footer-info">
                 <div>
                   <span style="color: var(--text-muted);">Pomodoros completados:</span>
@@ -152,6 +148,73 @@
                   <span>Modo:</span>
                   <button id="preset-std" class="btn-preset active">Estándar (25/5)</button>
                   <button id="preset-test" class="btn-preset">Prueba Rápida (10s/5s)</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- View 3: BeatSync Music Player Module -->
+          <section id="view-player" class="view-section">
+            <div class="player-wrapper">
+              <div class="player-main-grid">
+                <!-- Album Art Cover Card -->
+                <div id="album-cover" class="album-cover-card">
+                  <div class="album-disc-icon">🎧</div>
+                </div>
+
+                <!-- Track Info & Controls -->
+                <div class="player-info-column">
+                  <div class="track-meta">
+                    <h2 id="player-title">BeatSync Cyber Pulse</h2>
+                    <p id="player-artist">Synthwave Studio</p>
+                    <div id="player-album" class="track-album">DeskForge Session Vol. 1</div>
+                  </div>
+
+                  <!-- Progress Seekbar -->
+                  <div class="seekbar-container">
+                    <input id="player-seekbar" type="range" min="0" max="100" value="0" class="seekbar" />
+                    <div class="time-stamps">
+                      <span id="player-current-time">00:00</span>
+                      <span id="player-total-time">00:00</span>
+                    </div>
+                  </div>
+
+                  <!-- Controls Bar -->
+                  <div class="player-controls-bar">
+                    <div class="controls-center">
+                      <button id="btn-player-shuffle" class="btn-ctrl" title="Modo Aleatorio">
+                        🔀
+                      </button>
+                      <button id="btn-player-prev" class="btn-ctrl" title="Anterior">
+                        ⏮️
+                      </button>
+                      <button id="btn-player-play" class="btn-play-large" title="Reproducir/Pausar">
+                        <span id="play-icon">▶️</span>
+                      </button>
+                      <button id="btn-player-next" class="btn-ctrl" title="Siguiente">
+                        ⏭️
+                      </button>
+                      <button id="btn-player-repeat" class="btn-ctrl" title="Repetir (Off / Todo / Una)">
+                        🔁
+                      </button>
+                    </div>
+
+                    <!-- Volume Control -->
+                    <div class="volume-control">
+                      <button id="btn-player-mute" class="btn-volume" title="Silenciar">
+                        🔊
+                      </button>
+                      <input id="player-volume" type="range" min="0" max="100" value="80" class="volume-slider" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Queue List -->
+              <div class="player-queue">
+                <div class="queue-title">Cola de reproducción (Demo E4)</div>
+                <div id="player-queue-list" class="queue-list">
+                  <!-- Generated dynamically in main.js -->
                 </div>
               </div>
             </div>
