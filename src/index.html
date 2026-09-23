@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' http://localhost:* ws://localhost:*;" />
+    <title>DeskForge + BeatSync</title>
+    <link rel="stylesheet" href="./styles/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <h1>DeskForge + BeatSync</h1>
+        <p class="subtitle">Donde el código y la música se sincronizan</p>
+      </header>
+
+      <main class="app-main">
+        <div class="status-card">
+          <h2>FASE 0 — Estructura Base</h2>
+          <p>Electron, Vite, Preload e IPC bridge configurados correctamente.</p>
+          <div id="ping-status" class="status-badge">Verificando comunicación IPC...</div>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

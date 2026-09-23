@@ -1,0 +1,23 @@
+{
+  "name": "deskforge-beatsync",
+  "version": "1.0.0",
+  "description": "DeskForge + BeatSync - Suite de productividad con reproductor musical interactivo",
+  "main": "electron/main.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "build": "vite build && electron-builder --win",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "howler": "^2.2.4"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5",
+    "electron": "^44.4.4",
+    "electron-builder": "^26.15.3",
+    "vite": "^8.3.0",
+    "wait-on": "^9.1.0"
+  }
+}

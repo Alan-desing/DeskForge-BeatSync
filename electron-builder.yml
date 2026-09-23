@@ -1,0 +1,17 @@
+appId: com.deskforge.beatsync
+productName: DeskForge + BeatSync
+directories:
+  output: dist-installer
+files:
+  - electron/**/*
+  - dist/**/*
+  - package.json
+win:
+  target: nsis
+  artifactName: "${productName}-Setup-${version}.${ext}"
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: DeskForge + BeatSync

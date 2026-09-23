@@ -1,0 +1,103 @@
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent-color: #6366f1;
+  --accent-hover: #4f46e5;
+  --success-color: #10b981;
+  --border-color: #334155;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  user-select: none;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 2.5rem;
+}
+
+.app-header {
+  margin-bottom: 2rem;
+}
+
+.app-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-top: 0.35rem;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.status-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  max-width: 600px;
+}
+
+.status-card h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.status-card p {
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  background-color: #334155;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.status-badge.active {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.status-badge.error {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
