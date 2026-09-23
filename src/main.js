@@ -1,4 +1,5 @@
 import './styles/main.css';
+import { PomodoroTimer } from './services/pomodoro.js';
 
 console.log('[DeskForge] Workspace initialized.');
 
@@ -9,10 +10,10 @@ let currentFilePath = null;
 let isUnsaved = false;
 
 window.addEventListener('DOMContentLoaded', () => {
-  // IPC Connectivity Dot Indicator
+  // 1. Connectivity Status
   const statusDot = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
-  
+
   if (window.deskforgeAPI && typeof window.deskforgeAPI.ping === 'function') {
     if (statusDot) statusDot.style.backgroundColor = '#10b981';
     if (statusText) statusText.textContent = 'En línea';
@@ -21,7 +22,35 @@ window.addEventListener('DOMContentLoaded', () => {
     if (statusText) statusText.textContent = 'IPC Desconectado';
   }
 
-  // Sidebar Actions (E1 APIs)
+  // 2. Navigation Tab Switching (Notes / Pomodoro)
+  const navItems = document.querySelectorAll('.nav-item[data-target]');
+  const viewSections = document.querySelectorAll('.view-section');
+  const topbarViewTitle = document.getElementById('topbar-view-title');
+
+  navItems.forEach((item) => {
+    item.addEventListener('click', () => {
+      if (item.classList.contains('disabled')) return;
+
+      navItems.forEach((i) => i.classList.remove('active'));
+      item.classList.add('active');
+
+      const targetId = item.getAttribute('data-target');
+      viewSections.forEach((sec) => {
+        if (sec.id === targetId) {
+          sec.classList.add('active');
+        } else {
+          sec.classList.remove('active');
+        }
+      });
+
+      if (topbarViewTitle) {
+        if (targetId === 'view-notes') topbarViewTitle.textContent = 'Bloc de Notas';
+        if (targetId === 'view-pomodoro') topbarViewTitle.textContent = 'Temporizador Pomodoro';
+      }
+    });
+  });
+
+  // 3. Sidebar Actions (E1 Native APIs)
   const btnAbout = document.getElementById('btn-about');
   if (btnAbout) {
     btnAbout.addEventListener('click', async () => {
@@ -40,7 +69,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Notepad Logic (E2)
+  // 4. E2: Notepad Component Logic
   const editor = document.getElementById('note-editor');
   const filePathEl = document.getElementById('note-file-path');
   const saveStatusEl = document.getElementById('note-save-status');
@@ -198,4 +227,106 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   loadLocalDraft();
+
+  // 5. E3: Pomodoro Timer Logic
+  const pomoDisplay = document.getElementById('pomo-display');
+  const pomoPhaseLabel = document.getElementById('pomo-phase-label');
+  const pomoCircle = document.getElementById('pomo-circle');
+  const pomoToggleBtn = document.getElementById('btn-pomo-toggle');
+  const pomoToggleLabel = document.getElementById('pomo-toggle-label');
+  const pomoResetBtn = document.getElementById('btn-pomo-reset');
+  const pomoSkipBtn = document.getElementById('btn-pomo-skip');
+  const pomoWorkBtn = document.getElementById('btn-mode-work');
+  const pomoBreakBtn = document.getElementById('btn-mode-break');
+  const pomoCompletedCount = document.getElementById('pomo-completed-count');
+
+  const presetStdBtn = document.getElementById('preset-std');
+  const presetTestBtn = document.getElementById('preset-test');
+
+  const pomodoro = new PomodoroTimer({
+    workDuration: 25 * 60,
+    breakDuration: 5 * 60,
+    onTick: ({ formattedTime, mode }) => {
+      if (pomoDisplay) pomoDisplay.textContent = formattedTime;
+    },
+    onStateChange: ({ isRunning, mode, completedCycles }) => {
+      if (pomoToggleLabel) pomoToggleLabel.textContent = isRunning ? 'Pausar' : 'Iniciar';
+
+      if (pomoCircle) {
+        if (mode === 'break') {
+          pomoCircle.classList.add('break');
+        } else {
+          pomoCircle.classList.remove('break');
+        }
+      }
+
+      if (pomoWorkBtn && pomoBreakBtn) {
+        if (mode === 'work') {
+          pomoWorkBtn.className = 'btn-mode active work';
+          pomoBreakBtn.className = 'btn-mode break';
+          if (pomoPhaseLabel) pomoPhaseLabel.textContent = 'Sesión de Trabajo';
+        } else {
+          pomoWorkBtn.className = 'btn-mode work';
+          pomoBreakBtn.className = 'btn-mode active break';
+          if (pomoPhaseLabel) pomoPhaseLabel.textContent = 'Tiempo de Descanso';
+        }
+      }
+
+      if (pomoCompletedCount) pomoCompletedCount.textContent = completedCycles;
+    },
+    onFinish: async (completedMode, completedCycles) => {
+      const isWorkFinished = completedMode === 'work';
+      const notificationTitle = isWorkFinished ? '¡Pomodoro Finalizado!' : '¡Descanso Finalizado!';
+      const notificationBody = isWorkFinished
+        ? 'Excelente trabajo. Es hora de tomar un descanso de 5 minutos.'
+        : '¡Descanso terminado! Listo para empezar una nueva sesión de trabajo.';
+
+      if (window.deskforgeAPI && window.deskforgeAPI.notify) {
+        await window.deskforgeAPI.notify({
+          title: notificationTitle,
+          body: notificationBody
+        });
+      }
+    }
+  });
+
+  if (pomoToggleBtn) {
+    pomoToggleBtn.addEventListener('click', () => pomodoro.toggle());
+  }
+
+  if (pomoResetBtn) {
+    pomoResetBtn.addEventListener('click', () => pomodoro.reset());
+  }
+
+  if (pomoSkipBtn) {
+    pomoSkipBtn.addEventListener('click', () => {
+      const nextMode = pomodoro.mode === 'work' ? 'break' : 'work';
+      pomodoro.switchMode(nextMode);
+    });
+  }
+
+  if (pomoWorkBtn) {
+    pomoWorkBtn.addEventListener('click', () => pomodoro.switchMode('work'));
+  }
+
+  if (pomoBreakBtn) {
+    pomoBreakBtn.addEventListener('click', () => pomodoro.switchMode('break'));
+  }
+
+  // Presets (25/5 vs Fast Test 10s/5s)
+  if (presetStdBtn) {
+    presetStdBtn.addEventListener('click', () => {
+      presetStdBtn.classList.add('active');
+      if (presetTestBtn) presetTestBtn.classList.remove('active');
+      pomodoro.setDurations(25 * 60, 5 * 60);
+    });
+  }
+
+  if (presetTestBtn) {
+    presetTestBtn.addEventListener('click', () => {
+      presetTestBtn.classList.add('active');
+      if (presetStdBtn) presetStdBtn.classList.remove('active');
+      pomodoro.setDurations(10, 5);
+    });
+  }
 });

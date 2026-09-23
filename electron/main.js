@@ -86,7 +86,7 @@ function showAboutDialog() {
     type: 'info',
     title: 'Acerca de DeskForge + BeatSync',
     message: 'DeskForge + BeatSync v1.0.0',
-    detail: 'Suite de productividad con reproductor musical interactivo.\n\nE1: Ventana principal redimensionable, menú nativo y tray.\nE2: Bloc de Notas con autoguardado y diálogos nativos.\nPlataforma: Windows (Electron + Desktop APIs).',
+    detail: 'Suite de productividad con reproductor musical interactivo.\n\nE1: Ventana principal, menú nativo y tray.\nE2: Bloc de Notas con autoguardado.\nE3: Temporizador Pomodoro con notificaciones nativas.\nPlataforma: Windows (Electron + Desktop APIs).',
     buttons: ['Aceptar']
   });
 }
@@ -295,6 +295,18 @@ ipcMain.handle('file:saveAs', async (_, { content }) => {
     console.error('Error guardando archivo como:', err);
     throw new Error('No se pudo guardar el archivo.');
   }
+});
+
+// IPC Handler for E3 - Notifications (Pomodoro & Native alerts)
+ipcMain.handle('notify', async (_, { title, body }) => {
+  if (Notification.isSupported()) {
+    new Notification({
+      title: title || 'DeskForge — Pomodoro',
+      body: body || '¡Temporizador finalizado!'
+    }).show();
+    return true;
+  }
+  return false;
 });
 
 app.whenReady().then(() => {

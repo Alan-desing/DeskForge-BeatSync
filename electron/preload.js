@@ -12,5 +12,8 @@ contextBridge.exposeInMainWorld('deskforgeAPI', {
   // E2: Bloc de Notas (Notepad) APIs
   openFile: () => ipcRenderer.invoke('file:open'),
   saveFile: (data) => ipcRenderer.invoke('file:save', data),
-  saveFileAs: (data) => ipcRenderer.invoke('file:saveAs', data)
+  saveFileAs: (data) => ipcRenderer.invoke('file:saveAs', data),
+
+  // E3: Pomodoro & Native Notifications
+  notify: (data) => ipcRenderer.invoke('notify', data)
 });

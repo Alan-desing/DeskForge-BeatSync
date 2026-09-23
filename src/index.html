@@ -21,15 +21,15 @@
           </div>
 
           <nav class="nav-menu">
-            <div class="nav-item active" id="nav-notes">
+            <div class="nav-item active" id="nav-notes" data-target="view-notes">
               <span>📝</span>
               <span>Bloc de Notas</span>
             </div>
-            <div class="nav-item disabled" title="Próximamente">
+            <div class="nav-item" id="nav-pomodoro" data-target="view-pomodoro">
               <span>⏱️</span>
               <span>Pomodoro</span>
             </div>
-            <div class="nav-item disabled" title="Próximamente">
+            <div class="nav-item disabled" id="nav-player" title="Próximamente">
               <span>🎵</span>
               <span>Reproductor</span>
             </div>
@@ -68,41 +68,91 @@
 
         <!-- View Container -->
         <div class="view-container">
-          <!-- Notepad Module -->
-          <section class="notepad-wrapper">
-            <div class="notepad-header">
-              <div class="file-meta">
-                <span id="note-file-path" class="file-name">Nota Sin Título</span>
-                <span id="note-save-status" class="badge-status saved">Guardado localmente</span>
+          <!-- View 1: Notepad Module -->
+          <section id="view-notes" class="view-section active">
+            <div class="notepad-wrapper">
+              <div class="notepad-header">
+                <div class="file-meta">
+                  <span id="note-file-path" class="file-name">Nota Sin Título</span>
+                  <span id="note-save-status" class="badge-status saved">Guardado localmente</span>
+                </div>
+
+                <div class="action-buttons">
+                  <button id="btn-note-new" class="btn-action">
+                    <span>📄</span> Nueva
+                  </button>
+                  <button id="btn-note-open" class="btn-action">
+                    <span>📂</span> Abrir
+                  </button>
+                  <button id="btn-note-save" class="btn-action primary">
+                    <span>💾</span> Guardar
+                  </button>
+                  <button id="btn-note-save-as" class="btn-action">
+                    <span>💾</span> Guardar Como...
+                  </button>
+                </div>
               </div>
 
-              <div class="action-buttons">
-                <button id="btn-note-new" class="btn-action">
-                  <span>📄</span> Nueva
-                </button>
-                <button id="btn-note-open" class="btn-action">
-                  <span>📂</span> Abrir
-                </button>
-                <button id="btn-note-save" class="btn-action primary">
-                  <span>💾</span> Guardar
-                </button>
-                <button id="btn-note-save-as" class="btn-action">
-                  <span>💾</span> Guardar Como...
-                </button>
+              <textarea
+                id="note-editor"
+                class="notepad-textarea"
+                placeholder="Escribe tus notas de código o ideas aquí... Tu trabajo se autoguarda automáticamente."
+              ></textarea>
+
+              <div class="notepad-footer">
+                <span id="note-status-msg">DeskForge + BeatSync v1.0.0</span>
+                <div class="stats-group">
+                  <span id="note-word-count">0 palabras</span>
+                  <span id="note-char-count">0 caracteres</span>
+                </div>
               </div>
             </div>
+          </section>
 
-            <textarea
-              id="note-editor"
-              class="notepad-textarea"
-              placeholder="Escribe tus notas de código o ideas aquí... Tu trabajo se autoguarda automáticamente."
-            ></textarea>
+          <!-- View 2: Pomodoro Module -->
+          <section id="view-pomodoro" class="view-section">
+            <div class="pomodoro-wrapper">
+              <!-- Mode selector buttons -->
+              <div class="pomodoro-mode-selector">
+                <button id="btn-mode-work" class="btn-mode active work">
+                  <span>🛠️</span> Trabajo (25m)
+                </button>
+                <button id="btn-mode-break" class="btn-mode break">
+                  <span>☕</span> Descanso (5m)
+                </button>
+              </div>
 
-            <div class="notepad-footer">
-              <span id="note-status-msg">DeskForge + BeatSync v1.0.0</span>
-              <div class="stats-group">
-                <span id="note-word-count">0 palabras</span>
-                <span id="note-char-count">0 caracteres</span>
+              <!-- Main Circular Timer Display -->
+              <div id="pomo-circle" class="pomodoro-timer-circle">
+                <div id="pomo-display" class="timer-display">25:00</div>
+                <div id="pomo-phase-label" class="timer-phase-label">Sesión de Trabajo</div>
+              </div>
+
+              <!-- Controls -->
+              <div class="pomodoro-controls">
+                <button id="btn-pomo-reset" class="btn-timer-icon" title="Reiniciar">
+                  🔄
+                </button>
+                <button id="btn-pomo-toggle" class="btn-timer-main">
+                  <span>▶️</span> <span id="pomo-toggle-label">Iniciar</span>
+                </button>
+                <button id="btn-pomo-skip" class="btn-timer-icon" title="Siguiente Fase">
+                  ⏭️
+                </button>
+              </div>
+
+              <!-- Footer Stats & Presets -->
+              <div class="pomodoro-footer-info">
+                <div>
+                  <span style="color: var(--text-muted);">Pomodoros completados:</span>
+                  <strong id="pomo-completed-count" style="color: var(--accent-light);">0</strong>
+                </div>
+
+                <div class="preset-switcher">
+                  <span>Modo:</span>
+                  <button id="preset-std" class="btn-preset active">Estándar (25/5)</button>
+                  <button id="preset-test" class="btn-preset">Prueba Rápida (10s/5s)</button>
+                </div>
               </div>
             </div>
           </section>
