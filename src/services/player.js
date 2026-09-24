@@ -84,11 +84,11 @@ export class MusicPlayer {
 
     const ext = track.format ? track.format.toLowerCase() : 'mp3';
 
-    // Howl instance creation
+    // Set html5: false so Web Audio API routes audio directly to Howler.masterGain -> Speakers & Analyser
     this.sound = new Howl({
       src: [track.src],
       format: [ext],
-      html5: true,
+      html5: false,
       volume: this.isMuted ? 0 : this.volume,
       onplay: () => {
         this.isPlaying = true;

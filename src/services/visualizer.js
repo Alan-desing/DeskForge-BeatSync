@@ -2,10 +2,8 @@ import { Howler } from 'howler';
 
 /**
  * Audio Visualizer Engine using Web Audio API (AnalyserNode) + HTML5 Canvas
- * Renders real-time reactive audio graphics:
- * - Frequency Bars (Barras de Frecuencia)
- * - Waveform (Onda de Forma de Onda / Osciloscopio)
- * - Radial Wave (Círculo Radial Reactivo)
+ * Tap into Howler's masterGain node so sound plays loudly through speakers
+ * while feeding real-time audio data to the visualizer canvas.
  */
 export class AudioVisualizer {
   constructor(canvasElement) {
@@ -19,15 +17,12 @@ export class AudioVisualizer {
 
     this.frequencyData = null;
     this.timeDomainData = null;
-    this.mediaSourceNode = null;
     this.masterConnected = false;
   }
 
   init() {
     try {
-      if (!this.audioCtx) {
-        this.audioCtx = Howler.ctx || new (window.AudioContext || window.webkitAudioContext)();
-      }
+      this.audioCtx = Howler.ctx || new (window.AudioContext || window.webkitAudioContext)();
 
       if (!this.analyser && this.audioCtx) {
         this.analyser = this.audioCtx.createAnalyser();
@@ -38,6 +33,7 @@ export class AudioVisualizer {
         this.frequencyData = new Uint8Array(binCount);
         this.timeDomainData = new Uint8Array(binCount);
 
+        // Tap into Howler's masterGain node safely without muting speaker output
         if (Howler.masterGain && !this.masterConnected) {
           Howler.masterGain.connect(this.analyser);
           this.masterConnected = true;
@@ -48,34 +44,24 @@ export class AudioVisualizer {
     }
   }
 
-  attachSound(howlSound) {
-    this.init();
-    if (!this.audioCtx || !this.analyser || !howlSound) return;
-
-    try {
-      if (howlSound._sounds && howlSound._sounds[0]) {
-        const node = howlSound._sounds[0]._node;
-        if (node instanceof HTMLAudioElement && !this.mediaSourceNode) {
-          this.mediaSourceNode = this.audioCtx.createMediaElementSource(node);
-          this.mediaSourceNode.connect(this.analyser);
-          this.analyser.connect(this.audioCtx.destination);
-        }
-      }
-    } catch (e) {
-      // Node already connected or cross-origin safe
-    }
-  }
-
   setMode(mode) {
     this.mode = mode;
   }
 
-  start(howlSound) {
+  start() {
     this.init();
-    if (howlSound) this.attachSound(howlSound);
 
     if (this.audioCtx && this.audioCtx.state === 'suspended') {
       this.audioCtx.resume();
+    }
+
+    if (Howler.masterGain && !this.masterConnected && this.analyser) {
+      try {
+        Howler.masterGain.connect(this.analyser);
+        this.masterConnected = true;
+      } catch (e) {
+        // Connected
+      }
     }
 
     this.stop();
@@ -143,7 +129,7 @@ export class AudioVisualizer {
       const percent = val / 255;
       const barHeight = Math.max(4, percent * (height * 0.85));
 
-      const hue = (i / count) * 260 + 210; // Blue -> Purple -> Magenta
+      const hue = (i / count) * 260 + 210;
       this.ctx.fillStyle = `hsl(${hue}, 90%, 62%)`;
       this.ctx.shadowBlur = 8;
       this.ctx.shadowColor = `hsl(${hue}, 90%, 50%)`;
@@ -188,7 +174,6 @@ export class AudioVisualizer {
     this.ctx.lineTo(width, height / 2);
     this.ctx.stroke();
 
-    // Secondary subtle fill under wave
     this.ctx.lineTo(width, height);
     this.ctx.lineTo(0, height);
     this.ctx.fillStyle = 'rgba(56, 189, 248, 0.06)';
