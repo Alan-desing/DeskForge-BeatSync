@@ -255,14 +255,31 @@
                 </div>
               </div>
 
-              <!-- Queue List -->
-              <div class="player-queue">
+              <!-- E7: Playlists Header Bar & Tabs -->
+              <div class="playlist-header-bar">
+                <div class="playlist-tabs" id="playlist-tabs-container">
+                  <!-- Playlist tabs generated dynamically -->
+                </div>
+                <div class="create-playlist-box">
+                  <input type="text" id="input-new-playlist" class="input-playlist-name" placeholder="Nueva lista..." />
+                  <button id="btn-create-playlist" class="btn-action primary" style="padding: 0.35rem 0.65rem; font-size: 0.775rem;">+ Crear</button>
+                </div>
+              </div>
+
+              <!-- Queue & Drag Drop Dropzone -->
+              <div class="player-queue" id="queue-dropzone">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <div class="queue-title">Cola de reproducción</div>
-                  <span id="folder-status-label" style="font-size: 0.775rem; color: var(--text-muted);">Formatos soportados: MP3, OGG, WAV</span>
+                  <div class="queue-title" id="queue-header-title">Cola de reproducción</div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span id="folder-status-label" style="font-size: 0.775rem; color: var(--text-muted);">Formatos: MP3, OGG, WAV (Arrastra archivos aquí)</span>
+                    <button id="btn-delete-playlist" class="btn-action" style="padding: 0.25rem 0.5rem; font-size: 0.725rem; display: none;" title="Eliminar Lista Actual">
+                      <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      <span>Eliminar Lista</span>
+                    </button>
+                  </div>
                 </div>
                 <div id="player-queue-list" class="queue-list">
-                  <!-- Generated dynamically -->
+                  <!-- Generated dynamically with HTML5 drag & drop handlers -->
                 </div>
               </div>
             </div>
