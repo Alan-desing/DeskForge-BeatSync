@@ -6,6 +6,8 @@ console.log('[DeskForge] Workspace initialized.');
 
 const STORAGE_KEY_CONTENT = 'deskforge_notepad_content';
 const STORAGE_KEY_PATH = 'deskforge_notepad_filepath';
+const STORAGE_KEY_LOCAL_PLAYLIST = 'deskforge_local_playlist';
+const STORAGE_KEY_FOLDER_NAME = 'deskforge_local_foldername';
 
 let currentFilePath = null;
 let isUnsaved = false;
@@ -331,7 +333,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 6. E4: BeatSync Music Player Logic
+  // 6. E4 & E5: BeatSync Music Player & Local Folder Loader
   const playerTitle = document.getElementById('player-title');
   const playerArtist = document.getElementById('player-artist');
   const playerAlbum = document.getElementById('player-album');
@@ -348,6 +350,10 @@ window.addEventListener('DOMContentLoaded', () => {
   const volumeSlider = document.getElementById('player-volume');
   const muteBtn = document.getElementById('btn-player-mute');
   const queueListEl = document.getElementById('player-queue-list');
+  const btnSelectFolder = document.getElementById('btn-select-folder');
+  const folderStatusLabel = document.getElementById('folder-status-label');
+
+  let activePlaylist = DEMO_PLAYLIST;
 
   const formatAudioTime = (sec) => {
     if (isNaN(sec) || sec < 0) return '00:00';
@@ -363,8 +369,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const div = document.createElement('div');
       div.className = `queue-item ${index === activeIndex ? 'active' : ''}`;
       div.innerHTML = `
-        <span>${index + 1}. <strong>${item.title}</strong> — ${item.artist}</span>
-        <span>${formatAudioTime(item.duration)}</span>
+        <span>${index + 1}. <strong>${item.title}</strong> ${item.format ? `<span style="font-size:0.7rem; padding:0.1rem 0.4rem; background:#334155; border-radius:4px; margin-left:0.4rem; color:#34d399;">${item.format}</span>` : ''} — ${item.artist}</span>
+        <span>${item.duration > 0 ? formatAudioTime(item.duration) : 'Local'}</span>
       `;
       div.addEventListener('click', () => {
         player.loadTrack(index, true);
@@ -374,7 +380,7 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   const player = new MusicPlayer({
-    playlist: DEMO_PLAYLIST,
+    playlist: activePlaylist,
     onTrackChange: (track, index) => {
       if (playerTitle) playerTitle.textContent = track.title;
       if (playerArtist) playerArtist.textContent = track.artist;
@@ -382,7 +388,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (albumCover) {
         albumCover.style.background = track.coverGradient || 'var(--accent-gradient)';
       }
-      renderQueueList(DEMO_PLAYLIST, index);
+      renderQueueList(activePlaylist, index);
     },
     onPlayStateChange: (isPlaying) => {
       if (playIcon) playIcon.textContent = isPlaying ? '⏸️' : '▶️';
@@ -478,6 +484,57 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Load initial track metadata
-  player.loadTrack(0, false);
+  // E5: Select Local Music Folder Button
+  if (btnSelectFolder) {
+    btnSelectFolder.addEventListener('click', async () => {
+      if (!window.deskforgeAPI || !window.deskforgeAPI.selectMusicFolder) return;
+      try {
+        const result = await window.deskforgeAPI.selectMusicFolder();
+        if (result && result.tracks && result.tracks.length > 0) {
+          activePlaylist = result.tracks;
+          player.setPlaylist(activePlaylist, true);
+
+          if (folderStatusLabel) {
+            folderStatusLabel.textContent = `📁 ${result.folderName} (${result.tracks.length} canciones encontradas)`;
+          }
+
+          localStorage.setItem(STORAGE_KEY_LOCAL_PLAYLIST, JSON.stringify(result.tracks));
+          localStorage.setItem(STORAGE_KEY_FOLDER_NAME, result.folderName);
+        } else if (result && result.tracks && result.tracks.length === 0) {
+          if (folderStatusLabel) {
+            folderStatusLabel.textContent = `⚠️ No se encontraron archivos MP3, OGG o WAV en la carpeta.`;
+          }
+        }
+      } catch (err) {
+        console.error('Error seleccionando carpeta de música:', err);
+      }
+    });
+  }
+
+  // Restore saved local playlist if present
+  const restoreSavedPlaylist = () => {
+    try {
+      const savedTracksStr = localStorage.getItem(STORAGE_KEY_LOCAL_PLAYLIST);
+      const savedFolderName = localStorage.getItem(STORAGE_KEY_FOLDER_NAME);
+
+      if (savedTracksStr) {
+        const savedTracks = JSON.parse(savedTracksStr);
+        if (Array.isArray(savedTracks) && savedTracks.length > 0) {
+          activePlaylist = savedTracks;
+          player.setPlaylist(activePlaylist, false);
+          if (folderStatusLabel && savedFolderName) {
+            folderStatusLabel.textContent = `📁 ${savedFolderName} (${savedTracks.length} canciones)`;
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not restore saved playlist:', e);
+    }
+
+    // Default load demo track 0 without autoplay
+    player.loadTrack(0, false);
+  };
+
+  restoreSavedPlaylist();
 });

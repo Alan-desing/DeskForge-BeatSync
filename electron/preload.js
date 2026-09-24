@@ -15,5 +15,8 @@ contextBridge.exposeInMainWorld('deskforgeAPI', {
   saveFileAs: (data) => ipcRenderer.invoke('file:saveAs', data),
 
   // E3: Pomodoro & Native Notifications
-  notify: (data) => ipcRenderer.invoke('notify', data)
+  notify: (data) => ipcRenderer.invoke('notify', data),
+
+  // E5: Local Music Folder Loading
+  selectMusicFolder: () => ipcRenderer.invoke('music:selectFolder')
 });

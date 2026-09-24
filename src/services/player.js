@@ -1,8 +1,10 @@
 import { Howl, Howler } from 'howler';
 
+// Offline generated 44.1kHz WAV chime for demo tracks (avoids external network 404 errors)
+const DEMO_CHIME_AUDIO = 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVBvT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsCnAKcApsC';
+
 /**
- * Demo tracks for testing E4 player without requiring E5 local folder loading.
- * Uses reliable public domain audio streams with lightweight data URL fallbacks.
+ * Demo tracks for initial testing of E4 player.
  */
 export const DEMO_PLAYLIST = [
   {
@@ -10,8 +12,9 @@ export const DEMO_PLAYLIST = [
     title: 'BeatSync Cyber Pulse',
     artist: 'Synthwave Studio',
     album: 'DeskForge Session Vol. 1',
-    duration: 372,
-    src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+    format: 'WAV',
+    duration: 5,
+    src: DEMO_CHIME_AUDIO,
     coverGradient: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
   },
   {
@@ -19,18 +22,10 @@ export const DEMO_PLAYLIST = [
     title: 'Neon Code Flow',
     artist: 'Lo-Fi Chill Machine',
     album: 'DeskForge Session Vol. 1',
-    duration: 423,
-    src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    format: 'WAV',
+    duration: 5,
+    src: DEMO_CHIME_AUDIO,
     coverGradient: 'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)'
-  },
-  {
-    id: 'demo-3',
-    title: 'Midnight Focus Engine',
-    artist: 'Ambient Mind',
-    album: 'DeskForge Session Vol. 1',
-    duration: 345,
-    src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    coverGradient: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)'
   }
 ];
 
@@ -60,6 +55,19 @@ export class MusicPlayer {
     return this.playlist[this.currentIndex] || null;
   }
 
+  setPlaylist(tracks, autoPlay = true) {
+    if (!tracks || tracks.length === 0) return;
+    if (this.sound) {
+      this.sound.stop();
+      this.sound.unload();
+      this.sound = null;
+    }
+    this.stopProgressLoop();
+    this.playlist = tracks;
+    this.currentIndex = 0;
+    this.loadTrack(0, autoPlay);
+  }
+
   loadTrack(index, autoPlay = false) {
     if (index < 0 || index >= this.playlist.length) return;
 
@@ -74,8 +82,12 @@ export class MusicPlayer {
     const track = this.getCurrentTrack();
     if (!track) return;
 
+    const ext = track.format ? track.format.toLowerCase() : 'mp3';
+
+    // Howl instance creation
     this.sound = new Howl({
       src: [track.src],
+      format: [ext],
       html5: true,
       volume: this.isMuted ? 0 : this.volume,
       onplay: () => {
@@ -96,13 +108,20 @@ export class MusicPlayer {
       onend: () => {
         this.handleTrackEnd();
       },
+      onload: () => {
+        const dur = this.sound ? this.sound.duration() : 0;
+        if (dur && dur > 0) {
+          track.duration = dur;
+          this.notifyProgress(this.sound.seek() || 0, dur);
+        }
+      },
       onloaderror: (id, err) => {
-        console.warn('Audio load error, switching fallback track:', err);
+        console.warn('Howler error loading track:', track.title, err);
       }
     });
 
     this.notifyTrackChange();
-    this.notifyProgress(0, this.sound.duration() || track.duration);
+    this.notifyProgress(0, this.sound.duration() || track.duration || 0);
 
     if (autoPlay) {
       this.play();
@@ -149,7 +168,6 @@ export class MusicPlayer {
   previous() {
     if (this.playlist.length === 0) return;
 
-    // If current track is past 3 seconds, restart current track
     if (this.sound && this.sound.seek() > 3) {
       this.seek(0);
       return;

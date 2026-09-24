@@ -164,10 +164,17 @@
 
                 <!-- Track Info & Controls -->
                 <div class="player-info-column">
-                  <div class="track-meta">
-                    <h2 id="player-title">BeatSync Cyber Pulse</h2>
-                    <p id="player-artist">Synthwave Studio</p>
-                    <div id="player-album" class="track-album">DeskForge Session Vol. 1</div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div class="track-meta">
+                      <h2 id="player-title">BeatSync Cyber Pulse</h2>
+                      <p id="player-artist">Synthwave Studio</p>
+                      <div id="player-album" class="track-album">DeskForge Session Vol. 1</div>
+                    </div>
+
+                    <!-- E5: Folder Selection Button -->
+                    <button id="btn-select-folder" class="btn-action primary">
+                      <span>📁</span> Cargar Carpeta Local
+                    </button>
                   </div>
 
                   <!-- Progress Seekbar -->
@@ -212,9 +219,12 @@
 
               <!-- Queue List -->
               <div class="player-queue">
-                <div class="queue-title">Cola de reproducción (Demo E4)</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div class="queue-title">Cola de reproducción</div>
+                  <span id="folder-status-label" style="font-size: 0.775rem; color: var(--text-muted);">Formataos soportados: MP3, OGG, WAV</span>
+                </div>
                 <div id="player-queue-list" class="queue-list">
-                  <!-- Generated dynamically in main.js -->
+                  <!-- Generated dynamically -->
                 </div>
               </div>
             </div>
