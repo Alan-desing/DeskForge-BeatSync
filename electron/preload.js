@@ -9,6 +9,12 @@ contextBridge.exposeInMainWorld('deskforgeAPI', {
   showAbout: () => ipcRenderer.invoke('app:showAbout'),
   minimizeToTray: () => ipcRenderer.invoke('app:minimizeToTray'),
   openExternal: (url) => ipcRenderer.invoke('app:openExternal', url),
+  onTogglePlayerShortcut: (callback) => {
+    ipcRenderer.on('shortcut:toggle-player', () => callback());
+  },
+  onTogglePomodoroShortcut: (callback) => {
+    ipcRenderer.on('shortcut:toggle-pomodoro', () => callback());
+  },
 
   // E2: Bloc de Notas (Notepad) APIs
   openFile: () => ipcRenderer.invoke('file:open'),

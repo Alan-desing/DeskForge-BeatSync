@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, Tray, dialog, nativeImage, ipcMain, Notification, protocol, shell } = require('electron');
+const { app, BrowserWindow, Menu, Tray, dialog, nativeImage, ipcMain, Notification, protocol, shell, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -104,7 +104,7 @@ function showAboutDialog() {
     type: 'info',
     title: 'Acerca de DeskForge + BeatSync',
     message: 'DeskForge + BeatSync v1.0.0',
-    detail: 'Suite de productividad con reproductor musical interactivo.\n\nE1: Ventana principal, menú nativo y tray.\nE2: Bloc de Notas con autoguardado.\nE3: Temporizador Pomodoro con notificaciones.\nE4: Reproductor musical Howler.js.\nE5: Carga de música local (MP3, OGG, WAV).\nPlataforma: Windows (Electron + Desktop APIs).',
+    detail: 'Suite de productividad con reproductor musical interactivo.\n\nIncluye bloc de notas con autoguardado, temporizador Pomodoro, reproductor musical con audio local, visualizaciones, playlists, integración con Spotify, atajos globales, ecualizador y temas.\n\nPlataforma: Windows (Electron + Desktop APIs).',
     buttons: ['Aceptar']
   });
 }
@@ -232,6 +232,34 @@ ipcMain.handle('app:openExternal', async (_, url) => {
   await shell.openExternal(url);
   return true;
 });
+
+
+function registerGlobalShortcuts() {
+  const shortcuts = [
+    {
+      accelerator: 'CommandOrControl+Shift+Space',
+      channel: 'shortcut:toggle-player',
+      label: 'reproducir/pausar'
+    },
+    {
+      accelerator: 'CommandOrControl+Shift+P',
+      channel: 'shortcut:toggle-pomodoro',
+      label: 'iniciar/pausar Pomodoro'
+    }
+  ];
+
+  shortcuts.forEach(({ accelerator, channel, label }) => {
+    const registered = globalShortcut.register(accelerator, () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send(channel);
+      }
+    });
+
+    if (!registered) {
+      console.warn(`[Shortcuts] No se pudo registrar ${accelerator} (${label}).`);
+    }
+  });
+}
 
 // IPC Handlers for E2 - Bloc de Notas
 ipcMain.handle('file:open', async () => {
@@ -527,6 +555,7 @@ app.whenReady().then(() => {
   createApplicationMenu();
   createWindow();
   createTray();
+  registerGlobalShortcuts();
   startSpotifyCallbackServer();
 
   app.on('activate', () => {
@@ -534,6 +563,11 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+});
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
+  stopSpotifyCallbackServer();
 });
 
 app.on('window-all-closed', () => {

@@ -4,6 +4,7 @@ import { MusicPlayer, DEMO_PLAYLIST } from './services/player.js';
 import { AudioVisualizer } from './services/visualizer.js';
 import { PlaylistManager } from './services/playlists.js';
 import { SpotifyService } from './services/spotify.js';
+import { AudioEqualizer } from './services/equalizer.js';
 
 console.log('[DeskForge] Workspace initialized.');
 
@@ -20,6 +21,7 @@ const STORAGE_KEY_CONTENT = 'deskforge_notepad_content';
 const STORAGE_KEY_PATH = 'deskforge_notepad_filepath';
 const STORAGE_KEY_LOCAL_PLAYLIST = 'deskforge_local_playlist';
 const STORAGE_KEY_FOLDER_NAME = 'deskforge_local_foldername';
+const STORAGE_KEY_THEME = 'deskforge_theme';
 
 let currentFilePath = null;
 let isUnsaved = false;
@@ -30,6 +32,29 @@ console.log('Spotify Client ID:', import.meta.env.VITE_SPOTIFY_CLIENT_ID);
 console.log('Spotify Service Client ID:', spotifyService.getClientId());
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Theme: saved preference first, otherwise follow the operating system.
+  const themeToggleBtn = document.getElementById('btn-theme-toggle');
+  const themeToggleLabel = document.getElementById('theme-toggle-label');
+
+  const applyTheme = (theme) => {
+    document.documentElement.dataset.theme = theme;
+    if (themeToggleLabel) {
+      themeToggleLabel.textContent = theme === 'dark' ? 'Tema claro' : 'Tema oscuro';
+    }
+  };
+
+  const savedTheme = localStorage.getItem(STORAGE_KEY_THEME);
+  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  applyTheme(savedTheme || systemTheme);
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem(STORAGE_KEY_THEME, nextTheme);
+      applyTheme(nextTheme);
+    });
+  }
+
   // 1. Connectivity Status
   const statusDot = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
@@ -568,6 +593,7 @@ window.addEventListener('DOMContentLoaded', () => {
       renderQueueList(activePlaylist, index);
     },
     onPlayStateChange: (isPlaying) => {
+      if (isPlaying) equalizer.init();
       if (playIcon) playIcon.innerHTML = isPlaying ? SVG_PAUSE : SVG_PLAY;
       if (albumCover) {
         if (isPlaying) {
@@ -616,6 +642,61 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // Three-band equalizer using Web Audio BiquadFilterNode.
+  const equalizer = new AudioEqualizer();
+  const eqLow = document.getElementById('eq-low');
+  const eqMid = document.getElementById('eq-mid');
+  const eqHigh = document.getElementById('eq-high');
+  const eqLowValue = document.getElementById('eq-low-value');
+  const eqMidValue = document.getElementById('eq-mid-value');
+  const eqHighValue = document.getElementById('eq-high-value');
+  const eqResetBtn = document.getElementById('btn-eq-reset');
+
+  const updateEqualizerUI = (values) => {
+    const bands = [
+      ['low', eqLow, eqLowValue],
+      ['mid', eqMid, eqMidValue],
+      ['high', eqHigh, eqHighValue]
+    ];
+
+    bands.forEach(([band, input, output]) => {
+      if (input) input.value = values[band];
+      if (output) output.textContent = `${values[band] > 0 ? '+' : ''}${values[band]} dB`;
+    });
+  };
+
+  const bindEqualizerBand = (band, input, output) => {
+    if (!input) return;
+    input.addEventListener('input', () => {
+      const value = Number(input.value);
+      equalizer.setBand(band, value);
+      if (output) output.textContent = `${value > 0 ? '+' : ''}${value} dB`;
+    });
+  };
+
+  updateEqualizerUI(equalizer.getValues());
+  bindEqualizerBand('low', eqLow, eqLowValue);
+  bindEqualizerBand('mid', eqMid, eqMidValue);
+  bindEqualizerBand('high', eqHigh, eqHighValue);
+
+  if (eqResetBtn) {
+    eqResetBtn.addEventListener('click', () => {
+      updateEqualizerUI(equalizer.reset());
+    });
+  }
+
+  // Initialize the audio chain before playback so all local tracks pass through the EQ.
+  equalizer.init();
+
+  // Global shortcuts sent by Electron's main process.
+  if (window.deskforgeAPI?.onTogglePlayerShortcut) {
+    window.deskforgeAPI.onTogglePlayerShortcut(() => player.togglePlay());
+  }
+
+  if (window.deskforgeAPI?.onTogglePomodoroShortcut) {
+    window.deskforgeAPI.onTogglePomodoroShortcut(() => pomodoro.toggle());
+  }
 
   // Controls Event Listeners
   if (playBtn) {
@@ -748,7 +829,7 @@ window.addEventListener('DOMContentLoaded', () => {
       player.setPlaylist(activePlaylist, false);
       renderQueueList(activePlaylist, player.currentIndex);
       if (folderStatusLabel) {
-        folderStatusLabel.textContent = `✨ ${addedTracks.length} canción(es) agregada(s) por arrastre`;
+        folderStatusLabel.textContent = `${addedTracks.length} canción(es) agregada(s) por arrastre`;
       }
     }
   };
@@ -794,7 +875,7 @@ window.addEventListener('DOMContentLoaded', () => {
           player.setPlaylist(activePlaylist, true);
 
           if (folderStatusLabel) {
-            folderStatusLabel.textContent = `📁 ${result.folderName} (${result.tracks.length} canciones encontradas)`;
+            folderStatusLabel.textContent = `${result.folderName} (${result.tracks.length} canciones encontradas)`;
           }
 
           localStorage.setItem(STORAGE_KEY_LOCAL_PLAYLIST, JSON.stringify(result.tracks));
@@ -803,7 +884,7 @@ window.addEventListener('DOMContentLoaded', () => {
           renderQueueList(activePlaylist, player.currentIndex);
         } else if (result && result.tracks && result.tracks.length === 0) {
           if (folderStatusLabel) {
-            folderStatusLabel.textContent = `⚠️ No se encontraron archivos MP3, OGG o WAV en la carpeta.`;
+            folderStatusLabel.textContent = `No se encontraron archivos MP3, OGG o WAV en la carpeta.`;
           }
         }
       } catch (err) {
@@ -825,7 +906,7 @@ window.addEventListener('DOMContentLoaded', () => {
           activePlaylist = mainQueueTracks;
           player.setPlaylist(activePlaylist, false);
           if (folderStatusLabel && savedFolderName) {
-            folderStatusLabel.textContent = `📁 ${savedFolderName} (${savedTracks.length} canciones)`;
+            folderStatusLabel.textContent = `${savedFolderName} (${savedTracks.length} canciones)`;
           }
           renderPlaylistTabs();
           renderQueueList(activePlaylist, player.currentIndex);

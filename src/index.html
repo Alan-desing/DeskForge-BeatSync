@@ -46,6 +46,10 @@
             <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             <span>Acerca de DeskForge</span>
           </button>
+          <button id="btn-theme-toggle" class="btn-sidebar-footer" title="Cambiar tema">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+            <span id="theme-toggle-label">Tema claro</span>
+          </button>
           <button id="btn-minimize-tray" class="btn-sidebar-footer">
             <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
             <span>Minimizar a Tray</span>
@@ -195,7 +199,7 @@
                   <!-- E6: Audio Visualizer Canvas Container -->
                   <div class="visualizer-card">
                     <div class="visualizer-toolbar">
-                      <span class="visualizer-title">Visualizador de Audio en Tiempo Real (Web Audio API)</span>
+                      <span class="visualizer-title">Visualizador de Audio en Tiempo Real</span>
                       <div class="visualizer-modes">
                         <button id="btn-vis-bars" class="btn-vis-mode active">
                           <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -254,7 +258,37 @@
                       </button>
                       <input id="player-volume" type="range" min="0" max="100" value="80" class="volume-slider" />
                     </div>
+
+
                   </div>
+
+                  <div class="equalizer-card">
+                    <div class="equalizer-header">
+                      <div>
+                        <span class="equalizer-title">Ecualizador</span>
+                        <span class="equalizer-subtitle">Ajustá el tono del audio</span>
+                      </div>
+                      <button id="btn-eq-reset" class="btn-action eq-reset" type="button">Restablecer</button>
+                    </div>
+                    <div class="equalizer-bands">
+                      <label class="eq-band">
+                        <span>Bajos</span>
+                        <input id="eq-low" type="range" min="-12" max="12" step="1" value="0" />
+                        <output id="eq-low-value">0 dB</output>
+                      </label>
+                      <label class="eq-band">
+                        <span>Medios</span>
+                        <input id="eq-mid" type="range" min="-12" max="12" step="1" value="0" />
+                        <output id="eq-mid-value">0 dB</output>
+                      </label>
+                      <label class="eq-band">
+                        <span>Agudos</span>
+                        <input id="eq-high" type="range" min="-12" max="12" step="1" value="0" />
+                        <output id="eq-high-value">0 dB</output>
+                      </label>
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
@@ -290,7 +324,7 @@
             <section class="spotify-panel">
               <div class="spotify-panel-header">
                 <div>
-                  <span class="section-eyebrow">E8 · Integración externa</span>
+                  <span class="section-eyebrow">Integración externa</span>
                   <h3>Spotify</h3>
                   <p id="spotify-status">No hay ninguna cuenta conectada.</p>
                 </div>
