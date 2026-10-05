@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' http://localhost:* ws://localhost:* https://www.soundhelix.com;" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' http://localhost:* ws://localhost:* https://www.soundhelix.com https://accounts.spotify.com https://api.spotify.com;"
+    />
     <title>DeskForge + BeatSync</title>
     <link rel="stylesheet" href="./styles/main.css" />
   </head>
@@ -283,6 +286,45 @@
                 </div>
               </div>
             </div>
+            <!-- Integración con Spotify -->
+            <section class="spotify-panel">
+              <div class="spotify-panel-header">
+                <div>
+                  <span class="section-eyebrow">E8 · Integración externa</span>
+                  <h3>Spotify</h3>
+                  <p id="spotify-status">No hay ninguna cuenta conectada.</p>
+                </div>
+
+                <div class="spotify-actions">
+                  <button id="btn-spotify-connect" class="btn-action primary">
+                    Conectar Spotify
+                  </button>
+
+                  <button id="btn-spotify-logout" class="btn-action" hidden>
+                    Desconectar
+                  </button>
+                </div>
+              </div>
+
+              <div id="spotify-search-area" hidden>
+                <div class="spotify-search-row">
+                  <input
+                    id="spotify-search-input"
+                    type="text"
+                    placeholder="Buscar una canción o artista..."
+                    autocomplete="off"
+                  />
+
+                  <button id="btn-spotify-search" class="btn-action primary">
+                    Buscar
+                  </button>
+                </div>
+
+                <p id="spotify-search-status" class="spotify-message"></p>
+
+                <div id="spotify-results" class="spotify-results"></div>
+              </div>
+            </section>
           </section>
         </div>
       </main>

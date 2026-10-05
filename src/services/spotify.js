@@ -226,6 +226,55 @@ export class SpotifyService {
     return this.userProfile;
   }
 
+    /**
+   * Search tracks using the Spotify Web API.
+   */
+  async searchTracks(query) {
+    const cleanQuery = query.trim();
+
+    if (!cleanQuery) {
+      return [];
+    }
+
+    if (!this.accessToken || Date.now() >= this.expiresAt) {
+      if (this.refreshToken) {
+        await this.refreshAccessToken();
+      } else {
+        throw new Error('Debes conectar tu cuenta de Spotify primero.');
+      }
+    }
+
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(cleanQuery)}&type=track&limit=10`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 401 && this.refreshToken) {
+        await this.refreshAccessToken();
+        return this.searchTracks(query);
+      }
+
+      throw new Error('No se pudieron buscar canciones en Spotify.');
+    }
+
+    const data = await response.json();
+
+    return data.tracks.items.map((track) => ({
+      id: track.id,
+      title: track.name,
+      artist: track.artists.map((artist) => artist.name).join(', '),
+      album: track.album.name,
+      albumImage: track.album.images?.[0]?.url || null,
+      spotifyUrl: track.external_urls?.spotify || null,
+      previewUrl: track.preview_url || null
+    }));
+  }
+
   /**
    * Logout and clear all stored Spotify credentials
    */

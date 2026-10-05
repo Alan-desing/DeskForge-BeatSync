@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   root: 'src',
+  envDir: '..',
   base: './',
   build: {
     outDir: '../dist',

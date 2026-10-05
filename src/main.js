@@ -3,6 +3,7 @@ import { PomodoroTimer } from './services/pomodoro.js';
 import { MusicPlayer, DEMO_PLAYLIST } from './services/player.js';
 import { AudioVisualizer } from './services/visualizer.js';
 import { PlaylistManager } from './services/playlists.js';
+import { SpotifyService } from './services/spotify.js';
 
 console.log('[DeskForge] Workspace initialized.');
 
@@ -22,6 +23,11 @@ const STORAGE_KEY_FOLDER_NAME = 'deskforge_local_foldername';
 
 let currentFilePath = null;
 let isUnsaved = false;
+
+const spotifyService = new SpotifyService();
+
+console.log('Spotify Client ID:', import.meta.env.VITE_SPOTIFY_CLIENT_ID);
+console.log('Spotify Service Client ID:', spotifyService.getClientId());
 
 window.addEventListener('DOMContentLoaded', () => {
   // 1. Connectivity Status
@@ -839,4 +845,257 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   restoreSavedPlaylist();
+
+    // E8: Spotify Integration
+  const spotifyConnectBtn = document.getElementById('btn-spotify-connect');
+  const spotifyLogoutBtn = document.getElementById('btn-spotify-logout');
+  const spotifyStatus = document.getElementById('spotify-status');
+  const spotifySearchArea = document.getElementById('spotify-search-area');
+  const spotifySearchInput = document.getElementById('spotify-search-input');
+  const spotifySearchBtn = document.getElementById('btn-spotify-search');
+  const spotifySearchStatus = document.getElementById('spotify-search-status');
+  const spotifyResults = document.getElementById('spotify-results');
+
+  const renderSpotifyProfile = (profile) => {
+    if (!profile) {
+      if (spotifyStatus) {
+        spotifyStatus.textContent = 'No hay ninguna cuenta conectada.';
+      }
+
+      if (spotifyConnectBtn) {
+        spotifyConnectBtn.hidden = false;
+      }
+
+      if (spotifyLogoutBtn) {
+        spotifyLogoutBtn.hidden = true;
+      }
+
+      if (spotifySearchArea) {
+        spotifySearchArea.hidden = true;
+      }
+
+      return;
+    }
+
+    if (spotifyStatus) {
+      spotifyStatus.textContent = `Conectado como ${profile.displayName}`;
+    }
+
+    if (spotifyConnectBtn) {
+      spotifyConnectBtn.hidden = true;
+    }
+
+    if (spotifyLogoutBtn) {
+      spotifyLogoutBtn.hidden = false;
+    }
+
+    if (spotifySearchArea) {
+      spotifySearchArea.hidden = false;
+    }
+  };
+
+  const renderSpotifyResults = (tracks) => {
+    if (!spotifyResults) return;
+
+    spotifyResults.innerHTML = '';
+
+    if (!tracks.length) {
+      spotifyResults.innerHTML = `
+        <p class="spotify-message">
+          No se encontraron canciones.
+        </p>
+      `;
+      return;
+    }
+
+    tracks.forEach((track) => {
+      const result = document.createElement('article');
+      result.className = 'spotify-result';
+
+      result.innerHTML = `
+        <div class="spotify-result-info">
+          ${
+            track.albumImage
+              ? `<img src="${track.albumImage}" alt="Carátula de ${track.album}">`
+              : '<div class="spotify-result-placeholder"></div>'
+          }
+
+          <div>
+            <strong>${track.title}</strong>
+            <span>${track.artist}</span>
+            <small>${track.album}</small>
+          </div>
+        </div>
+
+        ${
+         track.spotifyUrl
+          ? `<button
+              class="btn-action spotify-open-btn"
+              type="button"
+              data-spotify-url="${track.spotifyUrl}"
+            >
+              Abrir en Spotify
+            </button>`
+          : ''
+        }
+      `;
+
+      spotifyResults.appendChild(result);
+
+      const openSpotifyButton = result.querySelector('.spotify-open-btn');
+
+      if (openSpotifyButton) {
+        openSpotifyButton.addEventListener('click', async () => {
+          const spotifyUrl = openSpotifyButton.dataset.spotifyUrl;
+
+          if (spotifyUrl) {
+            await window.deskforgeAPI.openExternal(spotifyUrl);
+          }
+        });
+      }
+    });
+  };
+
+    const connectSpotify = async () => {
+    try {
+      if (!spotifyService.getClientId()) {
+        throw new Error('No se encontró el Client ID de Spotify en el archivo .env.');
+      }
+
+      const authUrl = await spotifyService.buildAuthUrl();
+
+      window.open(authUrl, '_blank');
+
+      if (spotifyStatus) {
+        spotifyStatus.textContent =
+          'Se abrió Spotify. Completa la autorización para conectar tu cuenta.';
+      }
+    } catch (error) {
+      console.error('Error iniciando Spotify:', error);
+
+      if (spotifyStatus) {
+        spotifyStatus.textContent = error.message;
+      }
+    }
+  };
+
+    const handleSpotifyAuthCode = async (code) => {
+    try {
+      if (spotifyStatus) {
+        spotifyStatus.textContent = 'Conectando con Spotify...';
+      }
+
+      const profile = await spotifyService.exchangeCodeForToken(code);
+
+      renderSpotifyProfile(profile);
+
+      if (spotifyStatus) {
+        spotifyStatus.textContent =
+          `Conectado como ${profile.displayName}`;
+      }
+
+      console.log('[Spotify] Autenticación completada correctamente.');
+    } catch (error) {
+      console.error('Error completando autenticación de Spotify:', error);
+
+      if (spotifyStatus) {
+        spotifyStatus.textContent =
+          `Error al conectar con Spotify: ${error.message}`;
+      }
+    }
+  };
+
+  const handleSpotifyAuthError = (error) => {
+    console.error('[Spotify] Autorización cancelada o rechazada:', error);
+
+    if (spotifyStatus) {
+      spotifyStatus.textContent =
+        'La autorización de Spotify fue cancelada.';
+    }
+  };
+
+  if (
+    window.deskforgeAPI &&
+    typeof window.deskforgeAPI.onSpotifyAuthCode === 'function'
+  ) {
+    window.deskforgeAPI.onSpotifyAuthCode(handleSpotifyAuthCode);
+  }
+
+  if (
+    window.deskforgeAPI &&
+    typeof window.deskforgeAPI.onSpotifyAuthError === 'function'
+  ) {
+    window.deskforgeAPI.onSpotifyAuthError(handleSpotifyAuthError);
+  }
+
+
+  const logoutSpotify = () => {
+    spotifyService.logout();
+    renderSpotifyProfile(null);
+
+    if (spotifyResults) {
+      spotifyResults.innerHTML = '';
+    }
+
+    if (spotifySearchStatus) {
+      spotifySearchStatus.textContent = '';
+    }
+  };
+
+  const searchSpotify = async () => {
+    const query = spotifySearchInput?.value.trim();
+
+    if (!query) {
+      if (spotifySearchStatus) {
+        spotifySearchStatus.textContent = 'Escribí una canción o artista.';
+      }
+      return;
+    }
+
+    try {
+      if (spotifySearchStatus) {
+        spotifySearchStatus.textContent = 'Buscando canciones...';
+      }
+
+      const tracks = await spotifyService.searchTracks(query);
+
+      renderSpotifyResults(tracks);
+
+      if (spotifySearchStatus) {
+        spotifySearchStatus.textContent = `${tracks.length} resultado(s) encontrado(s).`;
+      }
+    } catch (error) {
+      console.error('Error buscando en Spotify:', error);
+
+      if (spotifySearchStatus) {
+        spotifySearchStatus.textContent = error.message;
+      }
+    }
+  };
+
+  if (spotifyConnectBtn) {
+    spotifyConnectBtn.addEventListener('click', connectSpotify);
+  }
+
+  if (spotifyLogoutBtn) {
+    spotifyLogoutBtn.addEventListener('click', logoutSpotify);
+  }
+
+  if (spotifySearchBtn) {
+    spotifySearchBtn.addEventListener('click', searchSpotify);
+  }
+
+  if (spotifySearchInput) {
+    spotifySearchInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        searchSpotify();
+      }
+    });
+  }
+
+  renderSpotifyProfile(
+    spotifyService.isAuthenticated()
+      ? spotifyService.getUserProfile()
+      : null
+  );
 });

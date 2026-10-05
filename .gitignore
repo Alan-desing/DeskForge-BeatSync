@@ -3,5 +3,4 @@ dist/
 dist-installer/
 *.log
 .DS_Store
-.env
 .env.local

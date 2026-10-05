@@ -1,9 +1,12 @@
-const { app, BrowserWindow, Menu, Tray, dialog, nativeImage, ipcMain, Notification, protocol } = require('electron');
+const { app, BrowserWindow, Menu, Tray, dialog, nativeImage, ipcMain, Notification, protocol, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 
 let mainWindow = null;
 let tray = null;
+
+let spotifyCallbackServer = null;
 
 const isDev = !app.isPackaged && process.env.NODE_ENV !== 'production';
 
@@ -220,6 +223,16 @@ ipcMain.handle('app:minimizeToTray', () => {
   if (mainWindow) mainWindow.hide();
 });
 
+// E8: Abrir enlaces externos de Spotify
+ipcMain.handle('app:openExternal', async (_, url) => {
+  if (!url || !url.startsWith('https://open.spotify.com/')) {
+    return false;
+  }
+
+  await shell.openExternal(url);
+  return true;
+});
+
 // IPC Handlers for E2 - Bloc de Notas
 ipcMain.handle('file:open', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
@@ -376,6 +389,100 @@ ipcMain.handle('music:selectFolder', async () => {
   }
 });
 
+/**
+ * Servidor local para recibir el callback OAuth de Spotify.
+ */
+function startSpotifyCallbackServer() {
+  if (spotifyCallbackServer) {
+    return;
+  }
+
+  spotifyCallbackServer = http.createServer((req, res) => {
+    const requestUrl = new URL(req.url, 'http://127.0.0.1:8888');
+
+    if (requestUrl.pathname !== '/callback') {
+      res.writeHead(404, {
+        'Content-Type': 'text/plain; charset=utf-8'
+      });
+      res.end('Not Found');
+      return;
+    }
+
+    const code = requestUrl.searchParams.get('code');
+    const error = requestUrl.searchParams.get('error');
+
+    if (error) {
+      res.writeHead(400, {
+        'Content-Type': 'text/html; charset=utf-8'
+      });
+      res.end(`
+        <html>
+          <body>
+            <h2>Autorización de Spotify cancelada</h2>
+            <p>Podés cerrar esta ventana y volver a DeskForge.</p>
+          </body>
+        </html>
+      `);
+
+      if (mainWindow) {
+        mainWindow.webContents.send('spotify:auth-error', error);
+      }
+
+      return;
+    }
+
+    if (!code) {
+      res.writeHead(400, {
+        'Content-Type': 'text/plain; charset=utf-8'
+      });
+      res.end('No se recibió el código de autorización.');
+      return;
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8'
+    });
+
+    res.end(`
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>DeskForge + BeatSync</title>
+        </head>
+        <body>
+          <h2>Spotify conectado correctamente</h2>
+          <p>Podés cerrar esta ventana y volver a DeskForge.</p>
+        </body>
+      </html>
+    `);
+
+    if (mainWindow) {
+      mainWindow.webContents.send('spotify:auth-code', code);
+    }
+    });
+
+  spotifyCallbackServer.on('error', (error) => {
+    console.error('[Spotify] Error en servidor de callback:', error);
+    spotifyCallbackServer = null;
+  });
+
+  spotifyCallbackServer.listen(8888, '127.0.0.1', () => {
+    console.log('[Spotify] Callback server escuchando en http://127.0.0.1:8888/callback');
+  });
+}
+
+function stopSpotifyCallbackServer() {
+  if (!spotifyCallbackServer) {
+    return;
+  }
+
+  spotifyCallbackServer.close(() => {
+    console.log('[Spotify] Callback server cerrado.');
+  });
+
+  spotifyCallbackServer = null;
+}
+
 app.whenReady().then(() => {
   // Handle custom media:// protocol to serve local audio files directly from disk
   protocol.handle('media', (request) => {
@@ -420,6 +527,7 @@ app.whenReady().then(() => {
   createApplicationMenu();
   createWindow();
   createTray();
+  startSpotifyCallbackServer();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

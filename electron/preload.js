@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('deskforgeAPI', {
   ping: () => 'pong',
   showAbout: () => ipcRenderer.invoke('app:showAbout'),
   minimizeToTray: () => ipcRenderer.invoke('app:minimizeToTray'),
+  openExternal: (url) => ipcRenderer.invoke('app:openExternal', url),
 
   // E2: Bloc de Notas (Notepad) APIs
   openFile: () => ipcRenderer.invoke('file:open'),
@@ -18,5 +19,14 @@ contextBridge.exposeInMainWorld('deskforgeAPI', {
   notify: (data) => ipcRenderer.invoke('notify', data),
 
   // E5: Local Music Folder Loading
-  selectMusicFolder: () => ipcRenderer.invoke('music:selectFolder')
+  selectMusicFolder: () => ipcRenderer.invoke('music:selectFolder'),
+
+  // E8: Spotify OAuth callback
+  onSpotifyAuthCode: (callback) => {
+    ipcRenderer.on('spotify:auth-code', (_, code) => callback(code));
+  },
+
+  onSpotifyAuthError: (callback) => {
+    ipcRenderer.on('spotify:auth-error', (_, error) => callback(error));
+  }
 });
